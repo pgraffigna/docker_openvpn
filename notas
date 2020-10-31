@@ -1,0 +1,24 @@
+# requisitos
+apt update && apt install -y docker.io docker-compose
+
+# creación de certificados
+docker-compose run --rm openvpn ovpn_genconfig -u udp://IP_SERVIDOR
+docker-compose run --rm openvpn ovpn_initpki
+chown -R $(whoami): openvpn-data
+
+# creación del contenedor
+docker-compose up -d 
+
+# validación con password
+export CLIENTE=NOMBRE_CLIENTE
+docker-compose run --rm openvpn easyrsa build-client-full $CLIENTE 
+
+# validación sin password
+export CLIENTE=NOMBRE_CLIENTE
+docker-compose run --rm openvpn easyrsa build-client-full $CLIENTE nopass
+
+# creación de archivos de configuración 
+docker-compose run --rm openvpn ovpn_getclient $CLIENTE > $CLIENTE.ovpn
+
+# revocar clientes
+docker-compose run --rm openvpn ovpn_revokeclient $CLIENTE
